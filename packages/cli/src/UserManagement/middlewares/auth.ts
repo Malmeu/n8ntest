@@ -59,18 +59,19 @@ export const refreshExpiringCookie: RequestHandler = async (
 export const samlAuth = (): void => {
 	console.log('setting up saml stuff');
 
-	const privatekey = readFileSync('/home/krynble/Workspace/Projects/n8n/sp-pvt.key.pem', 'utf8');
+	// const privatekey = readFileSync('/home/krynble/Workspace/Projects/n8n/sp-pvt.key.pem', 'utf8');
 	// const cert = readFileSync('/home/krynble/Workspace/Projects/n8n/sp-pub.cert.pem', 'utf8');
 
 	const samlStrategy = new SamlStrategy(
 		{
 			callbackUrl: 'http://localhost:5678/rest/login/saml/callback',
-			cert: 'MIICmzCCAYMCBgGFprIClTANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDDAZuOG5hcHAwHhcNMjMwMTEyMTU1NDIyWhcNMzMwMTEyMTU1NjAyWjARMQ8wDQYDVQQDDAZuOG5hcHAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCicuNSxQ378kzY01qEDLgnhqRWh0XgqK0i4MB72lzIA/d1GIMAJ0m5pKK0LolV6uY1B5OvVYjRyT1SNOz2o0ajT6rlH9k+2see0qXZ43kCjV35SpAPFyvqT70pDBc6XtUiZ3wDF+LD20v33hsSu/MjQVixlx5GE2KjmVmOdRvm5ZPR51Fp03GKQFBD1/8eh7wL72+6yOvHQD/QAIupCBoKmZQueClnO/wLYdq0zpumIj+YzQ5qyF60UuRwT4xJGTYe5i/B7Q3ls1iixxblbxvwPMwXJ6GY5+yHRgf4OHJ2kJAW3AbJwe60KbXVM6Af5Xl5c4E0ubYiCAk3QqXdwHPBAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAB3x14HRVaU3WSYJyQP4v71y40xKDkmF1TJw0FwjE+yUpEvcoLrquw7/RtuvudVqfGueL2HD9eTtCEXi69jf6IjlGE7Niugr7L3e9blv3bviEJpS5zV9wTYESJ2m743wNrkVnUgkMsr85WQQzzok+zlCC/NnQYVGCz2R61AgMe8zczNJnJNcfvTRCXocyEsYmZ5YFYpsJR5dYEVoMPaY5gE2baDJI6jWi1N016RxSx8CKXiQJHkb0m45SwIHC7XCozsbZIEzELK+3GyIU9n+dv437IMRBFZNj2zhGl4LCgL24ft4CzQonJxl//B6bLEMISJTZ4bkJ268Cq1lsd2SxZc=',
+			cert: 'MIICmzCCAYMCBgGFoTGBXjANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDDAZuOG5hcHAwHhcNMjMwMTExMTQxNTU0WhcNMzMwMTExMTQxNzM0WjARMQ8wDQYDVQQDDAZuOG5hcHAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDbCr9sxmIqOBIK1h0K+ztpjDjJjwMVLlu+2bTWPO9zipjQGNGxPFW7Pmv16Xoaw2BrtdUj5Qn133tUvXVgLm4LY0bGW63M0D4XeG/Ti6H2mmgyD8Ad/R/14KE8PD5Dpdv/HG/4DPWxMMgbVPhHwYFSRXy+0+HKTCPNFPEJ1BnN9P/J4NgiPrrX2Hk1EHL8qRnWFBbcBMc3BnStUGbKg18vXVVu08gqhLukqUdRg4eNJuwAjSK7fyi3y6NWH+KH4sPKqWcC9KjcmtJyoU5MyKriG3qMoCvdFyd2Z32v+eCujG8rztjti8FLPesVGvsHt961WHMqEpKwMe434UjPKpdXAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAEFOjylC8xOobkh6o8c69g+bOkASfUsxuYD9C4tinP9zN/D+zoxtQOC2GYxQeaV7QOikK5gPizt1Wzd86VRg29RAXWdkPoF3m5n0zQkQWX80b9ZV4QTiCTpWUOZu3VJ0WHUuWjFv8sMmTOaGJxskP3b2ID3CgekwW3ywZ+8rae5s1zVLcsJ6VHF/ScdV/ZGsFsOY5oopECI51MdiI2HK+ahzprPCC7lCiGfotqtZxtojQsxkoEVJjBkerGmqPSrPhag8HTCSSaWWpPAmg40IDlkXYpjWXRrr4L2aXA37zuBd+u9fa1FrYxk4Ijr/54+tU57IJWWAq2tDUYgn0cW2G/I=',
 			issuer: 'n8napp',
 			entryPoint: 'http://localhost:8080/realms/n8nio/protocol/saml',
 			signatureAlgorithm: 'sha256',
-			decryptionPvk: privatekey,
-			privateKey: privatekey,
+			digestAlgorithm: 'sha256',
+			// decryptionPvk: privatekey,
+			// privateKey: privatekey,
 		},
 		async function (req, profile, done) {
 			console.log('trying to find a user based on profile', profile);

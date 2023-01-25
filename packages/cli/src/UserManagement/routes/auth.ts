@@ -113,27 +113,12 @@ export function authenticationMethods(this: N8nApp): void {
 		}),
 	);
 
-	this.app.post(
-		`/${this.restEndpoint}/login/saml/callback`,
-		bodyParser.urlencoded({ extended: false }),
-		passport.authenticate('saml', {
-			failureRedirect: '/',
-			failureFlash: true,
-		}),
-		function (req, res) {
-			console.log('req: ', req);
-			res.redirect('/');
-		},
-	);
-
 	this.app.get(
-		`/${this.restEndpoint}/login/saml`,
-		passport.authenticate('saml', {
-			failureRedirect: '/',
-			failureFlash: true,
-		}),
-		function (req, res) {
-			res.redirect('/');
+		`/${this.restEndpoint}/login/saml/callback`,
+		passport.authenticate('saml', { failureRedirect: '/callback_error', failureFlash: true }),
+		(req, res) => {
+			console.log(req.query);
+			res.send('potato');
 		},
 	);
 }
