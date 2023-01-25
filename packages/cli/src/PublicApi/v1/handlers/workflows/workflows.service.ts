@@ -77,7 +77,7 @@ export async function getWorkflowIdsViaTags(tags: string[]): Promise<string[]> {
 export async function createWorkflow(
 	workflow: WorkflowEntity,
 	user: User,
-	role: Role,
+	roleId: Role['id'],
 ): Promise<WorkflowEntity> {
 	return Db.transaction(async (transactionManager) => {
 		const newWorkflow = new WorkflowEntity();
@@ -86,7 +86,7 @@ export async function createWorkflow(
 
 		const newSharedWorkflow = new SharedWorkflow();
 		Object.assign(newSharedWorkflow, {
-			role,
+			roleId,
 			user,
 			workflow: savedWorkflow,
 		});

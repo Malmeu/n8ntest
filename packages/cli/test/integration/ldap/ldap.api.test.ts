@@ -173,7 +173,7 @@ describe('PUT /ldap/config', () => {
 			.put('/ldap/config')
 			.send({ ...configuration, loginEnabled: false });
 
-		const emailUser = await Db.collections.User.findOneByOrFail({ id: member.id });
+		const emailUser = await Db.repositories.User.findByIdOrFail(member.id);
 		const localLdapIdentities = await testDb.getLdapIdentities();
 
 		expect(emailUser.email).toBe(member.email);
@@ -274,7 +274,7 @@ describe('POST /ldap/sync', () => {
 			expect(synchronization.created).toBe(1);
 
 			// Make sure only the instance owner is on the DB
-			const localDbUsers = await Db.collections.User.find();
+			const localDbUsers = await Db.repositories.User.findAll();
 			expect(localDbUsers.length).toBe(1);
 			expect(localDbUsers[0].id).toBe(owner.id);
 		});

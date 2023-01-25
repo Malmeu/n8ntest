@@ -1,3 +1,4 @@
+import type { ObjectLiteral } from 'typeorm';
 import { BeforeUpdate, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { IsDate, IsOptional } from 'class-validator';
 import config from '@/config';
@@ -14,7 +15,7 @@ const timestampSyntax = {
 export const jsonColumnType = dbType === 'sqlite' ? 'simple-json' : 'json';
 export const datetimeColumnType = dbType === 'postgresdb' ? 'timestamptz' : 'datetime';
 
-export abstract class AbstractEntity {
+export abstract class AbstractEntity implements ObjectLiteral {
 	@CreateDateColumn({
 		precision: 3,
 		default: () => timestampSyntax,

@@ -13,9 +13,9 @@ import type { Repository } from 'typeorm';
 import type { ILogger } from 'n8n-workflow';
 import type { Config } from '@/config';
 import { OwnerRequest } from '@/requests';
-import type { IDatabaseCollections, IInternalHooksClass } from '@/Interfaces';
+import type { IInternalHooksClass } from '@/Interfaces';
 import type { Settings } from '@db/entities/Settings';
-import type { User } from '@db/entities/User';
+import type { Repositories, UserRepository } from '@db/repositories';
 
 @RestController('/owner')
 export class OwnerController {
@@ -25,7 +25,7 @@ export class OwnerController {
 
 	private readonly internalHooks: IInternalHooksClass;
 
-	private readonly userRepository: Repository<User>;
+	private readonly userRepository: UserRepository;
 
 	private readonly settingsRepository: Repository<Settings>;
 
@@ -38,7 +38,7 @@ export class OwnerController {
 		config: Config;
 		logger: ILogger;
 		internalHooks: IInternalHooksClass;
-		repositories: Pick<IDatabaseCollections, 'User' | 'Settings'>;
+		repositories: Pick<Repositories, 'User' | 'Settings'>;
 	}) {
 		this.config = config;
 		this.logger = logger;
@@ -84,10 +84,7 @@ export class OwnerController {
 			throw new BadRequestError('First and last names are mandatory');
 		}
 
-		let owner = await this.userRepository.findOne({
-			relations: ['globalRole'],
-			where: { id: userId },
-		});
+		let owner = await this.userRepository.findById(userId, { includeRole: true });
 
 		if (!owner || (owner.globalRole.scope === 'global' && owner.globalRole.name !== 'owner')) {
 			this.logger.debug(

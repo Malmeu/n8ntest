@@ -121,7 +121,7 @@ export async function initTestServer({
 			testServer.app,
 			AUTHLESS_ENDPOINTS,
 			REST_PATH_SEGMENT,
-			Db.collections.User,
+			Db.repositories.User,
 		);
 	}
 
@@ -166,7 +166,7 @@ export async function initTestServer({
 		const externalHooks = ExternalHooks();
 		const internalHooks = InternalHooksManager.getInstance();
 		const mailer = UserManagementMailer.getInstance();
-		const repositories = Db.collections;
+		const repositories = Db.repositories;
 
 		for (const group of functionEndpoints) {
 			switch (group) {

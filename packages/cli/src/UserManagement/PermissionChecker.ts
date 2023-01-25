@@ -9,7 +9,7 @@ import { In } from 'typeorm';
 import * as Db from '@/Db';
 import config from '@/config';
 import type { SharedCredentials } from '@db/entities/SharedCredentials';
-import { getRoleId, getWorkflowOwner, isSharingEnabled } from './UserManagementHelper';
+import { getWorkflowOwner, isSharingEnabled } from './UserManagementHelper';
 import { WorkflowsService } from '@/workflows/workflows.services';
 import { UserService } from '@/user/user.service';
 
@@ -28,10 +28,7 @@ export class PermissionChecker {
 
 		// allow if requesting user is instance owner
 
-		const user = await Db.collections.User.findOneOrFail({
-			where: { id: userId },
-			relations: ['globalRole'],
-		});
+		const user = await Db.repositories.User.findByIdOrFail(userId, { includeRole: true });
 
 		if (user.globalRole.name === 'owner') return;
 
@@ -52,7 +49,7 @@ export class PermissionChecker {
 
 		if (!isSharingEnabled()) {
 			// If credential sharing is not enabled, get only credentials owned by this user
-			credentialsWhere.roleId = await getRoleId('credential', 'owner');
+			credentialsWhere.roleId = await Db.repositories.Role.findCredentialOwnerRoleIdOrFail();
 		}
 
 		const credentialSharings = await Db.collections.SharedCredentials.find({
@@ -127,7 +124,7 @@ export class PermissionChecker {
 		}
 
 		if (policy === 'workflowsFromSameOwner') {
-			const user = await UserService.get({ id: userId });
+			const user = await UserService.getById(userId);
 			if (!user) {
 				throw new WorkflowOperationError(
 					'Fatal error: user not found. Please contact the system administrator.',

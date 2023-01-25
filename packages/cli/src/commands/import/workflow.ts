@@ -73,7 +73,7 @@ export class ImportWorkflowsCommand extends Command {
 		}),
 	};
 
-	ownerWorkflowRole: Role;
+	ownerWorkflowRoleId: Role['id'];
 
 	transactionManager: EntityManager;
 
@@ -198,15 +198,12 @@ export class ImportWorkflowsCommand extends Command {
 	}
 
 	private async initOwnerWorkflowRole() {
-		const ownerWorkflowRole = await Db.collections.Role.findOne({
-			where: { name: 'owner', scope: 'workflow' },
-		});
-
-		if (!ownerWorkflowRole) {
+		const ownerWorkflowRoleId = await Db.repositories.Role.findWorkflowOwnerRoleId();
+		if (!ownerWorkflowRoleId) {
 			throw new Error(`Failed to find owner workflow role. ${FIX_INSTRUCTION}`);
 		}
 
-		this.ownerWorkflowRole = ownerWorkflowRole;
+		this.ownerWorkflowRoleId = ownerWorkflowRoleId;
 	}
 
 	private async storeWorkflow(workflow: object, user: User) {
@@ -216,7 +213,7 @@ export class ImportWorkflowsCommand extends Command {
 			{
 				workflowId: result.identifiers[0].id,
 				userId: user.id,
-				roleId: this.ownerWorkflowRole.id,
+				roleId: this.ownerWorkflowRoleId,
 			},
 			['workflowId', 'userId'],
 		);
@@ -228,23 +225,15 @@ export class ImportWorkflowsCommand extends Command {
 	}
 
 	private async getOwner() {
-		const ownerGlobalRole = await Db.collections.Role.findOne({
-			where: { name: 'owner', scope: 'global' },
-		});
-
-		const owner =
-			ownerGlobalRole &&
-			(await Db.collections.User.findOneBy({ globalRoleId: ownerGlobalRole?.id }));
-
-		if (!owner) {
-			throw new Error(`Failed to find owner. ${FIX_INSTRUCTION}`);
+		try {
+			return await Db.repositories.User.findByRoleOrFail('global', 'owner');
+		} catch (error) {
+			throw new Error(`Failed to find owner. ${FIX_INSTRUCTION}`, { cause: error });
 		}
-
-		return owner;
 	}
 
 	private async getAssignee(userId: string) {
-		const user = await Db.collections.User.findOneBy({ id: userId });
+		const user = await Db.repositories.User.findById(userId);
 
 		if (!user) {
 			throw new Error(`Failed to find user with ID ${userId}`);

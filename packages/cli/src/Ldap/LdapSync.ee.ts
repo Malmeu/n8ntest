@@ -4,7 +4,7 @@ import { QueryFailedError } from 'typeorm/error/QueryFailedError';
 import type { LdapService } from './LdapService.ee';
 import type { LdapConfig } from './types';
 import {
-	getLdapUserRole,
+	getLdapUserRoleId,
 	mapLdapUserToDbUser,
 	processUsers,
 	saveLdapSynchronization,
@@ -95,12 +95,12 @@ export class LdapSync {
 
 		const localAdUsers = await getLdapIds();
 
-		const role = await getLdapUserRole();
+		const roleId = await getLdapUserRoleId();
 
 		const { usersToCreate, usersToUpdate, usersToDisable } = this.getUsersToProcess(
 			adUsers,
 			localAdUsers,
-			role,
+			roleId,
 		);
 
 		if (usersToDisable.length) {
@@ -168,14 +168,14 @@ export class LdapSync {
 	private getUsersToProcess(
 		adUsers: LdapUser[],
 		localAdUsers: string[],
-		role: Role,
+		roleId: Role['id'],
 	): {
 		usersToCreate: Array<[string, User]>;
 		usersToUpdate: Array<[string, User]>;
 		usersToDisable: string[];
 	} {
 		return {
-			usersToCreate: this.getUsersToCreate(adUsers, localAdUsers, role),
+			usersToCreate: this.getUsersToCreate(adUsers, localAdUsers, roleId),
 			usersToUpdate: this.getUsersToUpdate(adUsers, localAdUsers),
 			usersToDisable: this.getUsersToDisable(adUsers, localAdUsers),
 		};
@@ -187,11 +187,11 @@ export class LdapSync {
 	private getUsersToCreate(
 		remoteAdUsers: LdapUser[],
 		localLdapIds: string[],
-		role: Role,
+		roleId: Role['id'],
 	): Array<[string, User]> {
 		return remoteAdUsers
 			.filter((adUser) => !localLdapIds.includes(adUser[this._config.ldapIdAttribute] as string))
-			.map((adUser) => mapLdapUserToDbUser(adUser, this._config, role));
+			.map((adUser) => mapLdapUserToDbUser(adUser, this._config, roleId));
 	}
 
 	/**

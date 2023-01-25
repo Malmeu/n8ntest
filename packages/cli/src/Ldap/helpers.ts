@@ -73,9 +73,8 @@ export const randomPassword = (): string => {
 /**
  * Return the user role to be assigned to LDAP users
  */
-export const getLdapUserRole = async (): Promise<Role> => {
-	return Db.collections.Role.findOneByOrFail({ scope: 'global', name: 'member' });
-};
+export const getLdapUserRoleId = async (): Promise<Role['id']> =>
+	Db.repositories.Role.findGlobalMemberRoleIdOrFail();
 
 /**
  * Validate the structure of the LDAP configuration schema
@@ -293,10 +292,7 @@ export const getAuthIdentityByLdapId = async (
 };
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
-	return Db.collections.User.findOne({
-		where: { email },
-		relations: ['globalRole'],
-	});
+	return Db.repositories.User.findByEmail(email, { includeRole: true });
 };
 
 /**
@@ -346,13 +342,13 @@ export const getLdapUsers = async (): Promise<User[]> => {
 export const mapLdapUserToDbUser = (
 	ldapUser: LdapUser,
 	ldapConfig: LdapConfig,
-	role?: Role,
+	roleId?: Role['id'],
 ): [string, User] => {
 	const user = new User();
 	const [ldapId, data] = mapLdapAttributesToUser(ldapUser, ldapConfig);
 	Object.assign(user, data);
-	if (role) {
-		user.globalRole = role;
+	if (roleId) {
+		user.globalRoleId = roleId;
 		user.password = randomPassword();
 		user.disabled = false;
 	} else {
@@ -452,10 +448,14 @@ export const createLdapAuthIdentity = async (user: User, ldapId: string) => {
 	return Db.collections.AuthIdentity.save(AuthIdentity.create(user, ldapId));
 };
 
-export const createLdapUserOnLocalDb = async (role: Role, data: Partial<User>, ldapId: string) => {
-	const user = await Db.collections.User.save({
+export const createLdapUserOnLocalDb = async (
+	roleId: Role['id'],
+	data: Partial<User>,
+	ldapId: string,
+) => {
+	const user = await Db.repositories.User.save({
 		password: randomPassword(),
-		globalRole: role,
+		globalRoleId: roleId,
 		...data,
 	});
 	await createLdapAuthIdentity(user, ldapId);
@@ -465,7 +465,7 @@ export const createLdapUserOnLocalDb = async (role: Role, data: Partial<User>, l
 export const updateLdapUserOnLocalDb = async (identity: AuthIdentity, data: Partial<User>) => {
 	const userId = identity?.user?.id;
 	if (userId) {
-		await Db.collections.User.update({ id: userId }, data);
+		await Db.repositories.User.update(userId, data);
 	}
 };
 

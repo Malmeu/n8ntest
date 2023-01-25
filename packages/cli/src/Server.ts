@@ -346,7 +346,7 @@ class Server extends AbstractServer {
 
 	private registerControllers(ignoredEndpoints: Readonly<string[]>) {
 		const { app, externalHooks, activeWorkflowRunner } = this;
-		const repositories = Db.collections;
+		const repositories = Db.repositories;
 		setupAuthMiddlewares(app, ignoredEndpoints, this.restEndpoint, repositories.User);
 
 		const logger = LoggerProxy;

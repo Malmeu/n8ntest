@@ -20,7 +20,6 @@ import { WorkflowRunner } from '@/WorkflowRunner';
 import type { IWorkflowExecutionDataProcess } from '@/Interfaces';
 import { getLogger } from '@/Logger';
 import config from '@/config';
-import { getInstanceOwner } from '@/UserManagement/UserManagementHelper';
 import { findCliWorkflowStart } from '@/utils';
 import { initEvents } from '@/events';
 
@@ -150,7 +149,7 @@ export class Execute extends Command {
 		try {
 			const startingNode = findCliWorkflowStart(workflowData.nodes);
 
-			const user = await getInstanceOwner();
+			const user = await Db.repositories.User.findByRoleOrFail('global', 'owner');
 			const runData: IWorkflowExecutionDataProcess = {
 				executionMode: 'cli',
 				startNodes: [startingNode.name],

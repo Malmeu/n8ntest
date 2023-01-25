@@ -14,7 +14,7 @@ import { mysqlMigrations } from '@db/migrations/mysqldb';
 import { postgresMigrations } from '@db/migrations/postgresdb';
 import { sqliteMigrations } from '@db/migrations/sqlite';
 import { hashPassword } from '@/UserManagement/UserManagementHelper';
-import { AuthIdentity } from '@/databases/entities/AuthIdentity';
+import { AuthIdentity } from '@db/entities/AuthIdentity';
 import type { ExecutionEntity } from '@db/entities/ExecutionEntity';
 import { InstalledNodes } from '@db/entities/InstalledNodes';
 import { InstalledPackages } from '@db/entities/InstalledPackages';
@@ -142,12 +142,12 @@ export async function saveCredential(
 }
 
 export async function shareCredentialWithUsers(credential: CredentialsEntity, users: User[]) {
-	const role = await Db.collections.Role.findOneBy({ scope: 'credential', name: 'user' });
+	const roleId = await Db.repositories.Role.findCredentialUserRoleId();
 	const newSharedCredentials = users.map((user) =>
 		Db.collections.SharedCredentials.create({
 			userId: user.id,
 			credentialsId: credential.id,
-			roleId: role?.id,
+			roleId,
 		}),
 	);
 	return Db.collections.SharedCredentials.save(newSharedCredentials);
@@ -176,7 +176,7 @@ export async function createUser(attributes: Partial<User> = {}): Promise<User> 
 		...rest,
 	};
 
-	return Db.collections.User.save(user);
+	return Db.repositories.User.save(user);
 }
 
 export async function createLdapUser(attributes: Partial<User>, ldapId: string): Promise<User> {
@@ -200,7 +200,7 @@ export async function createUserShell(globalRole: Role): Promise<User> {
 		shell.email = randomEmail();
 	}
 
-	return Db.collections.User.save(shell);
+	return Db.repositories.User.save(shell);
 }
 
 /**
@@ -215,9 +215,9 @@ export async function createManyUsers(
 		globalRole = await getGlobalMemberRole();
 	}
 
-	const users = await Promise.all(
+	return await Promise.all(
 		[...Array(amount)].map(async () =>
-			Db.collections.User.create({
+			Db.repositories.User.save({
 				email: email ?? randomEmail(),
 				password: await hashPassword(password ?? randomValidPassword()),
 				firstName: firstName ?? randomName(),
@@ -227,8 +227,6 @@ export async function createManyUsers(
 			}),
 		),
 	);
-
-	return Db.collections.User.save(users);
 }
 
 // --------------------------------------
@@ -258,7 +256,7 @@ export async function saveInstalledNode(
 
 export async function addApiKey(user: User): Promise<User> {
 	user.apiKey = randomApiKey();
-	return Db.collections.User.save(user);
+	return Db.repositories.User.save(user);
 }
 
 // ----------------------------------
@@ -310,9 +308,7 @@ export async function getAllRoles() {
 }
 
 export const getAllUsers = async () =>
-	Db.collections.User.find({
-		relations: ['globalRole', 'authIdentities'],
-	});
+	Db.repositories.User.findAll({ includeRole: true, includeIdentities: true });
 
 export const getLdapIdentities = async () =>
 	Db.collections.AuthIdentity.find({

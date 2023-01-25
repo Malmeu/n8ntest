@@ -9,18 +9,15 @@ import * as ResponseHelper from '@/ResponseHelper';
 import type { PublicUser, WhereClause } from '@/Interfaces';
 import type { User } from '@db/entities/User';
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from '@db/entities/User';
-import type { Role } from '@db/entities/Role';
 import type { AuthenticatedRequest } from '@/requests';
 import config from '@/config';
 import { getWebhookBaseUrl } from '@/WebhookHelpers';
 import { getLicense } from '@/License';
-import { RoleService } from '@/role/role.service';
 
 export async function getWorkflowOwner(workflowId: string): Promise<User> {
-	const workflowOwnerRole = await RoleService.get({ name: 'owner', scope: 'workflow' });
-
+	const workflowOwnerRoleId = await Db.repositories.Role.findWorkflowOwnerRoleId();
 	const sharedWorkflow = await Db.collections.SharedWorkflow.findOneOrFail({
-		where: { workflowId, roleId: workflowOwnerRole?.id ?? undefined },
+		where: { workflowId, roleId: workflowOwnerRoleId },
 		relations: ['user', 'user.globalRole'],
 	});
 
@@ -56,28 +53,6 @@ export function isUserManagementDisabled(): boolean {
 		config.getEnv('userManagement.disabled') &&
 		!config.getEnv('userManagement.isInstanceOwnerSetUp')
 	);
-}
-
-export async function getRoleId(scope: Role['scope'], name: Role['name']): Promise<Role['id']> {
-	return Db.collections.Role.findOneOrFail({
-		select: ['id'],
-		where: {
-			name,
-			scope,
-		},
-	}).then((role) => role.id);
-}
-
-export async function getInstanceOwner(): Promise<User> {
-	const ownerRoleId = await getRoleId('global', 'owner');
-
-	const owner = await Db.collections.User.findOneOrFail({
-		relations: ['globalRole'],
-		where: {
-			globalRoleId: ownerRoleId,
-		},
-	});
-	return owner;
 }
 
 /**
@@ -163,14 +138,6 @@ export function addInviteLinkToUser(user: PublicUser, inviterId: string): Public
 	if (user.isPending) {
 		user.inviteAcceptUrl = generateUserInviteUrl(inviterId, user.id);
 	}
-	return user;
-}
-
-export async function getUserById(userId: string): Promise<User> {
-	const user = await Db.collections.User.findOneOrFail({
-		where: { id: userId },
-		relations: ['globalRole'],
-	});
 	return user;
 }
 

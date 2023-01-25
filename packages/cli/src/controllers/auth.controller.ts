@@ -7,11 +7,10 @@ import { AUTH_COOKIE_NAME } from '@/constants';
 import { Request, Response } from 'express';
 import type { ILogger } from 'n8n-workflow';
 import type { User } from '@db/entities/User';
+import type { Repositories, UserRepository } from '@db/repositories';
 import { LoginRequest, UserRequest } from '@/requests';
-import type { Repository } from 'typeorm';
-import { In } from 'typeorm';
 import type { Config } from '@/config';
-import type { PublicUser, IDatabaseCollections, IInternalHooksClass } from '@/Interfaces';
+import type { PublicUser, IInternalHooksClass } from '@/Interfaces';
 import { handleEmailLogin, handleLdapLogin } from '@/auth';
 
 @RestController()
@@ -22,7 +21,7 @@ export class AuthController {
 
 	private readonly internalHooks: IInternalHooksClass;
 
-	private readonly userRepository: Repository<User>;
+	private readonly userRepository: UserRepository;
 
 	constructor({
 		config,
@@ -33,7 +32,7 @@ export class AuthController {
 		config: Config;
 		logger: ILogger;
 		internalHooks: IInternalHooksClass;
-		repositories: Pick<IDatabaseCollections, 'User'>;
+		repositories: Pick<Repositories, 'User'>;
 	}) {
 		this.config = config;
 		this.logger = logger;
@@ -87,10 +86,7 @@ export class AuthController {
 		}
 
 		try {
-			user = await this.userRepository.findOneOrFail({
-				relations: ['globalRole'],
-				where: {},
-			});
+			user = await this.userRepository.findInstanceOwnerOrFail();
 		} catch (error) {
 			throw new InternalServerError(
 				'No users found in database - did you wipe the users table? Create at least one user.',
@@ -131,7 +127,7 @@ export class AuthController {
 			}
 		}
 
-		const users = await this.userRepository.find({ where: { id: In([inviterId, inviteeId]) } });
+		const users = await this.userRepository.findByIds([inviterId, inviteeId]);
 		if (users.length !== 2) {
 			this.logger.debug(
 				'Request to resolve signup token failed because the ID of the inviter and/or the ID of the invitee were not found in database',

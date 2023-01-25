@@ -148,7 +148,7 @@ test('DELETE /users/:id should delete the user', async () => {
 	expect(response.statusCode).toBe(200);
 	expect(response.body).toEqual(SUCCESS_RESPONSE_BODY);
 
-	const user = await Db.collections.User.findOneBy({ id: userToDelete.id });
+	const user = await Db.repositories.User.findById(userToDelete.id);
 	expect(user).toBeNull(); // deleted
 
 	const sharedWorkflow = await Db.collections.SharedWorkflow.findOne({
@@ -179,7 +179,7 @@ test('DELETE /users/:id should fail to delete self', async () => {
 
 	expect(response.statusCode).toBe(400);
 
-	const user = await Db.collections.User.findOneBy({ id: owner.id });
+	const user = await Db.repositories.User.findById(owner.id);
 	expect(user).toBeDefined();
 });
 
@@ -194,7 +194,7 @@ test('DELETE /users/:id should fail if user to delete is transferee', async () =
 
 	expect(response.statusCode).toBe(400);
 
-	const user = await Db.collections.User.findOneBy({ id: idToDelete });
+	const user = await Db.repositories.User.findById(idToDelete);
 	expect(user).toBeDefined();
 });
 
@@ -232,7 +232,7 @@ test('DELETE /users/:id with transferId should perform transfer', async () => {
 	expect(sharedCredential.credentials).toBeDefined();
 	expect(sharedCredential.credentials.id).toBe(savedCredential.id);
 
-	const deletedUser = await Db.collections.User.findOneBy({ id: userToDelete.id });
+	const deletedUser = await Db.repositories.User.findById(userToDelete.id);
 
 	expect(deletedUser).toBeNull();
 });
@@ -280,7 +280,7 @@ test('POST /users/:id should fill out a user shell', async () => {
 	const authToken = utils.getAuthToken(response);
 	expect(authToken).toBeDefined();
 
-	const member = await Db.collections.User.findOneByOrFail({ id: memberShell.id });
+	const member = await Db.repositories.User.findByIdOrFail(memberShell.id);
 	expect(member.firstName).toBe(memberData.firstName);
 	expect(member.lastName).toBe(memberData.lastName);
 	expect(member.password).not.toBe(memberData.password);
@@ -293,7 +293,7 @@ test('POST /users/:id should fail with invalid inputs', async () => {
 
 	const memberShellEmail = randomEmail();
 
-	const memberShell = await Db.collections.User.save({
+	const memberShell = await Db.repositories.User.save({
 		email: memberShellEmail,
 		globalRole: globalMemberRole,
 	});
@@ -332,10 +332,7 @@ test('POST /users/:id should fail with invalid inputs', async () => {
 			const response = await authlessAgent.post(`/users/${memberShell.id}`).send(invalidPayload);
 			expect(response.statusCode).toBe(400);
 
-			const storedUser = await Db.collections.User.findOneOrFail({
-				where: { email: memberShellEmail },
-			});
-
+			const storedUser = await Db.repositories.User.findByEmailOrFail(memberShellEmail);
 			expect(storedUser.firstName).toBeNull();
 			expect(storedUser.lastName).toBeNull();
 			expect(storedUser.password).toBeNull();
@@ -360,9 +357,7 @@ test('POST /users/:id should fail with already accepted invite', async () => {
 
 	expect(response.statusCode).toBe(400);
 
-	const storedMember = await Db.collections.User.findOneOrFail({
-		where: { email: member.email },
-	});
+	const storedMember = await Db.repositories.User.findByEmailOrFail(member.email);
 	expect(storedMember.firstName).not.toBe(newMemberData.firstName);
 	expect(storedMember.lastName).not.toBe(newMemberData.lastName);
 
@@ -425,7 +420,7 @@ test('POST /users should email invites and create user shells but ignore existin
 			expect(error).toBe('Email could not be sent');
 		}
 
-		const storedUser = await Db.collections.User.findOneByOrFail({ id });
+		const storedUser = await Db.repositories.User.findByIdOrFail(id);
 		const { firstName, lastName, personalizationAnswers, password, resetPasswordToken } =
 			storedUser;
 
@@ -456,7 +451,7 @@ test('POST /users should fail with invalid inputs', async () => {
 			const response = await authOwnerAgent.post('/users').send(invalidPayload);
 			expect(response.statusCode).toBe(400);
 
-			const users = await Db.collections.User.find();
+			const users = await Db.repositories.User.findMany({});
 			expect(users.length).toBe(1); // DB unaffected
 		}),
 	);
@@ -475,7 +470,7 @@ test('POST /users should ignore an empty payload', async () => {
 	expect(Array.isArray(data)).toBe(true);
 	expect(data.length).toBe(0);
 
-	const users = await Db.collections.User.find();
+	const users = await Db.repositories.User.findAll();
 	expect(users.length).toBe(1);
 });
 

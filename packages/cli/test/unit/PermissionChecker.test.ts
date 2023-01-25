@@ -254,7 +254,7 @@ describe('PermissionChecker.checkSubworkflowExecutePolicy', () => {
 			.spyOn(UserManagementHelper, 'getWorkflowOwner')
 			.mockImplementation(async (workflowId) => fakeUser);
 		jest.spyOn(UserManagementHelper, 'isSharingEnabled').mockReturnValue(false);
-		jest.spyOn(UserService, 'get').mockImplementation(async () => fakeUser);
+		jest.spyOn(UserService, 'getById').mockImplementation(async () => fakeUser);
 		jest.spyOn(WorkflowsService, 'getSharing').mockImplementation(async () => {
 			return sharedWorkflowNotOwner;
 		});
@@ -292,7 +292,7 @@ describe('PermissionChecker.checkSubworkflowExecutePolicy', () => {
 			.spyOn(UserManagementHelper, 'getWorkflowOwner')
 			.mockImplementation(async (workflowId) => fakeUser);
 		jest.spyOn(UserManagementHelper, 'isSharingEnabled').mockReturnValue(true);
-		jest.spyOn(UserService, 'get').mockImplementation(async () => fakeUser);
+		jest.spyOn(UserService, 'getById').mockImplementation(async () => fakeUser);
 		jest.spyOn(WorkflowsService, 'getSharing').mockImplementation(async () => {
 			return sharedWorkflowNotOwner;
 		});
@@ -318,7 +318,7 @@ describe('PermissionChecker.checkSubworkflowExecutePolicy', () => {
 			.spyOn(UserManagementHelper, 'getWorkflowOwner')
 			.mockImplementation(async (workflowId) => fakeUser);
 		jest.spyOn(UserManagementHelper, 'isSharingEnabled').mockReturnValue(false);
-		jest.spyOn(UserService, 'get').mockImplementation(async () => fakeUser);
+		jest.spyOn(UserService, 'getById').mockImplementation(async () => fakeUser);
 		jest.spyOn(WorkflowsService, 'getSharing').mockImplementation(async () => {
 			return sharedWorkflowOwner;
 		});
@@ -341,7 +341,7 @@ describe('PermissionChecker.checkSubworkflowExecutePolicy', () => {
 			.spyOn(UserManagementHelper, 'getWorkflowOwner')
 			.mockImplementation(async (workflowId) => fakeUser);
 		jest.spyOn(UserManagementHelper, 'isSharingEnabled').mockReturnValue(true);
-		jest.spyOn(UserService, 'get').mockImplementation(async () => fakeUser);
+		jest.spyOn(UserService, 'getById').mockImplementation(async () => fakeUser);
 		jest.spyOn(WorkflowsService, 'getSharing').mockImplementation(async () => {
 			return sharedWorkflowNotOwner;
 		});
@@ -367,7 +367,7 @@ describe('PermissionChecker.checkSubworkflowExecutePolicy', () => {
 			.spyOn(UserManagementHelper, 'getWorkflowOwner')
 			.mockImplementation(async (workflowId) => fakeUser);
 		jest.spyOn(UserManagementHelper, 'isSharingEnabled').mockReturnValue(true);
-		jest.spyOn(UserService, 'get').mockImplementation(async () => fakeUser);
+		jest.spyOn(UserService, 'getById').mockImplementation(async () => fakeUser);
 		jest.spyOn(WorkflowsService, 'getSharing').mockImplementation(async () => {
 			return sharedWorkflowNotOwner;
 		});

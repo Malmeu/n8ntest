@@ -33,7 +33,6 @@ import { WorkflowRunner } from '@/WorkflowRunner';
 import type { IWorkflowDb, IWorkflowExecutionDataProcess } from '@/Interfaces';
 import config from '@/config';
 import type { User } from '@db/entities/User';
-import { getInstanceOwner } from '@/UserManagement/UserManagementHelper';
 import { findCliWorkflowStart } from '@/utils';
 import { initEvents } from '@/events';
 
@@ -290,7 +289,7 @@ export class ExecuteBatch extends Command {
 		// Wait till the database is ready
 		await startDbInitPromise;
 
-		ExecuteBatch.instanceOwner = await getInstanceOwner();
+		ExecuteBatch.instanceOwner = await Db.repositories.User.findByRoleOrFail('global', 'owner');
 
 		let allWorkflows;
 

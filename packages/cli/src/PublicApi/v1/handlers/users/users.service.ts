@@ -6,9 +6,6 @@ export function isInstanceOwner(user: User): boolean {
 	return user.globalRole.name === 'owner';
 }
 
-export async function getWorkflowOwnerRole(): Promise<Role> {
-	return Db.collections.Role.findOneByOrFail({
-		name: 'owner',
-		scope: 'workflow',
-	});
+export async function getWorkflowOwnerRole(): Promise<Role['id']> {
+	return Db.repositories.Role.findWorkflowOwnerRoleIdOrFail();
 }

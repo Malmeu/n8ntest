@@ -46,9 +46,9 @@ export = {
 
 			addNodeIds(workflow);
 
-			const role = await getWorkflowOwnerRole();
+			const roleId = await getWorkflowOwnerRole();
 
-			const createdWorkflow = await createWorkflow(workflow, req.user, role);
+			const createdWorkflow = await createWorkflow(workflow, req.user, roleId);
 
 			await ExternalHooks().run('workflow.afterCreate', [createdWorkflow]);
 			void InternalHooksManager.getInstance().onWorkflowCreated(req.user, createdWorkflow, true);

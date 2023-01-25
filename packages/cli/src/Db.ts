@@ -26,9 +26,12 @@ import {
 	getPostgresConnectionOptions,
 	getSqliteConnectionOptions,
 } from '@db/config';
+import type { Repositories } from '@db/repositories';
+import { RoleRepository, UserRepository } from '@db/repositories';
 
 export let isInitialized = false;
 export const collections = {} as IDatabaseCollections;
+export let repositories: Repositories & Omit<IDatabaseCollections, keyof Repositories>;
 
 export let connection: Connection;
 
@@ -170,8 +173,6 @@ export async function init(
 	collections.Workflow = linkRepository(entities.WorkflowEntity);
 	collections.Webhook = linkRepository(entities.WebhookEntity);
 	collections.Tag = linkRepository(entities.TagEntity);
-	collections.Role = linkRepository(entities.Role);
-	collections.User = linkRepository(entities.User);
 	collections.AuthIdentity = linkRepository(entities.AuthIdentity);
 	collections.AuthProviderSyncHistory = linkRepository(entities.AuthProviderSyncHistory);
 	collections.SharedCredentials = linkRepository(entities.SharedCredentials);
@@ -181,6 +182,16 @@ export async function init(
 	collections.InstalledNodes = linkRepository(entities.InstalledNodes);
 	collections.WorkflowStatistics = linkRepository(entities.WorkflowStatistics);
 	collections.EventDestinations = linkRepository(entities.EventDestinations);
+
+	repositories = {
+		...collections,
+		Role: new RoleRepository(connection),
+		User: new UserRepository(connection),
+	};
+
+	// @deprecated
+	collections.Role = linkRepository(entities.Role);
+	collections.User = linkRepository(entities.User);
 
 	isInitialized = true;
 

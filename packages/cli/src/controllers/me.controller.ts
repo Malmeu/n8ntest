@@ -11,16 +11,11 @@ import { User } from '@db/entities/User';
 import { validateEntity } from '@/GenericHelpers';
 import { issueCookie } from '@/auth/jwt';
 import { Response } from 'express';
-import type { Repository } from 'typeorm';
 import type { ILogger } from 'n8n-workflow';
 import { AuthenticatedRequest, MeRequest } from '@/requests';
-import type {
-	PublicUser,
-	IDatabaseCollections,
-	IExternalHooksClass,
-	IInternalHooksClass,
-} from '@/Interfaces';
+import type { PublicUser, IExternalHooksClass, IInternalHooksClass } from '@/Interfaces';
 import { randomBytes } from 'crypto';
+import type { Repositories, UserRepository } from '@db/repositories';
 
 @RestController('/me')
 export class MeController {
@@ -30,7 +25,7 @@ export class MeController {
 
 	private readonly internalHooks: IInternalHooksClass;
 
-	private readonly userRepository: Repository<User>;
+	private readonly userRepository: UserRepository;
 
 	constructor({
 		logger,
@@ -41,7 +36,7 @@ export class MeController {
 		logger: ILogger;
 		externalHooks: IExternalHooksClass;
 		internalHooks: IInternalHooksClass;
-		repositories: Pick<IDatabaseCollections, 'User'>;
+		repositories: Pick<Repositories, 'User'>;
 	}) {
 		this.logger = logger;
 		this.externalHooks = externalHooks;
@@ -147,26 +142,22 @@ export class MeController {
 	 */
 	@Post('/survey')
 	async storeSurveyAnswers(req: MeRequest.SurveyAnswers) {
+		const userId = req.user.id;
 		const { body: personalizationAnswers } = req;
 
 		if (!personalizationAnswers) {
 			this.logger.debug(
 				'Request to store user personalization survey failed because of empty payload',
-				{
-					userId: req.user.id,
-				},
+				{ userId },
 			);
 			throw new BadRequestError('Personalization answers are mandatory');
 		}
 
-		await this.userRepository.save({
-			id: req.user.id,
-			personalizationAnswers,
-		});
+		await this.userRepository.update(userId, { personalizationAnswers });
 
-		this.logger.info('User survey updated successfully', { userId: req.user.id });
+		this.logger.info('User survey updated successfully', { userId });
 
-		void this.internalHooks.onPersonalizationSurveySubmitted(req.user.id, personalizationAnswers);
+		void this.internalHooks.onPersonalizationSurveySubmitted(userId, personalizationAnswers);
 
 		return { success: true };
 	}
@@ -178,9 +169,7 @@ export class MeController {
 	async createAPIKey(req: AuthenticatedRequest) {
 		const apiKey = `n8n_api_${randomBytes(40).toString('hex')}`;
 
-		await this.userRepository.update(req.user.id, {
-			apiKey,
-		});
+		await this.userRepository.update(req.user.id, { apiKey });
 
 		void this.internalHooks.onApiKeyCreated({
 			user: req.user,
@@ -203,9 +192,7 @@ export class MeController {
 	 */
 	@Delete('/api-key')
 	async deleteAPIKey(req: AuthenticatedRequest) {
-		await this.userRepository.update(req.user.id, {
-			apiKey: null,
-		});
+		await this.userRepository.update(req.user.id, { apiKey: null });
 
 		void this.internalHooks.onApiKeyDeleted({
 			user: req.user,

@@ -100,17 +100,9 @@ e2eController.post('/db/setup-owner', bodyParser.json(), async (req, res) => {
 		return;
 	}
 
-	const globalRole = await Db.collections.Role.findOneOrFail({
-		select: ['id'],
-		where: {
-			name: 'owner',
-			scope: 'global',
-		},
-	});
+	const owner = await Db.repositories.User.findByRoleOrFail('global', 'owner');
 
-	const owner = await Db.collections.User.findOneByOrFail({ globalRoleId: globalRole.id });
-
-	await Db.collections.User.update(owner.id, {
+	await Db.repositories.User.update(owner.id, {
 		email: req.body.email,
 		password: await hashPassword(req.body.password),
 		firstName: req.body.firstName,

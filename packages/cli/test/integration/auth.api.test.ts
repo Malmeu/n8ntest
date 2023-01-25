@@ -315,7 +315,7 @@ test('GET /resolve-signup-token should fail with invalid inputs', async () => {
 		.query({ inviteeId });
 
 	// cause inconsistent DB state
-	await Db.collections.User.update(owner.id, { email: '' });
+	await Db.repositories.User.update(owner.id, { email: '' });
 	const fifth = await authOwnerAgent
 		.get('/resolve-signup-token')
 		.query({ inviterId: owner.id })

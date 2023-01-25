@@ -226,10 +226,7 @@ export class CredentialsService {
 
 		await ExternalHooks().run('credentials.create', [encryptedData]);
 
-		const role = await Db.collections.Role.findOneByOrFail({
-			name: 'owner',
-			scope: 'credential',
-		});
+		const roleId = await Db.repositories.Role.findCredentialOwnerRoleIdOrFail();
 
 		const result = await Db.transaction(async (transactionManager) => {
 			const savedCredential = await transactionManager.save<CredentialsEntity>(newCredential);
@@ -239,8 +236,8 @@ export class CredentialsService {
 			const newSharedCredential = new SharedCredentials();
 
 			Object.assign(newSharedCredential, {
-				role,
-				user,
+				roleId,
+				userId: user.id,
 				credentials: savedCredential,
 			});
 

@@ -1,5 +1,3 @@
-import type { Repository } from 'typeorm';
-import { IsNull, MoreThanOrEqual, Not } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 import validator from 'validator';
 import { Get, Post, RestController } from '@/decorators';
@@ -19,9 +17,9 @@ import * as UserManagementMailer from '@/UserManagement/email';
 import { Response } from 'express';
 import type { ILogger } from 'n8n-workflow';
 import type { Config } from '@/config';
-import type { User } from '@db/entities/User';
+import type { Repositories, UserRepository } from '@db/repositories';
 import { PasswordResetRequest } from '@/requests';
-import type { IDatabaseCollections, IExternalHooksClass, IInternalHooksClass } from '@/Interfaces';
+import type { IExternalHooksClass, IInternalHooksClass } from '@/Interfaces';
 import { issueCookie } from '@/auth/jwt';
 import { isLdapEnabled } from '@/Ldap/helpers';
 
@@ -35,7 +33,7 @@ export class PasswordResetController {
 
 	private readonly internalHooks: IInternalHooksClass;
 
-	private readonly userRepository: Repository<User>;
+	private readonly userRepository: UserRepository;
 
 	constructor({
 		config,
@@ -48,7 +46,7 @@ export class PasswordResetController {
 		logger: ILogger;
 		externalHooks: IExternalHooksClass;
 		internalHooks: IInternalHooksClass;
-		repositories: Pick<IDatabaseCollections, 'User'>;
+		repositories: Pick<Repositories, 'User'>;
 	}) {
 		this.config = config;
 		this.logger = logger;
@@ -90,13 +88,7 @@ export class PasswordResetController {
 		}
 
 		// User should just be able to reset password if one is already present
-		const user = await this.userRepository.findOne({
-			where: {
-				email,
-				password: Not(IsNull()),
-			},
-			relations: ['authIdentities'],
-		});
+		const user = await this.userRepository.findForPasswordReset(email);
 
 		const ldapIdentity = user?.authIdentities?.find((i) => i.providerType === 'ldap');
 
@@ -161,9 +153,9 @@ export class PasswordResetController {
 	 */
 	@Get('/resolve-password-token')
 	async resolvePasswordToken(req: PasswordResetRequest.Credentials) {
-		const { token: resetPasswordToken, userId: id } = req.query;
+		const { token: resetPasswordToken, userId } = req.query;
 
-		if (!resetPasswordToken || !id) {
+		if (!resetPasswordToken || !userId) {
 			this.logger.debug(
 				'Request to resolve password token failed because of missing password reset token or user ID in query string',
 				{
@@ -173,27 +165,16 @@ export class PasswordResetController {
 			throw new BadRequestError('');
 		}
 
-		// Timestamp is saved in seconds
-		const currentTimestamp = Math.floor(Date.now() / 1000);
-
-		const user = await this.userRepository.findOneBy({
-			id,
-			resetPasswordToken,
-			resetPasswordTokenExpiration: MoreThanOrEqual(currentTimestamp),
-		});
-
+		const user = await this.userRepository.findByPasswordResetToken(userId, resetPasswordToken);
 		if (!user) {
 			this.logger.debug(
 				'Request to resolve password token failed because no user was found for the provided user ID and reset password token',
-				{
-					userId: id,
-					resetPasswordToken,
-				},
+				{ userId, resetPasswordToken },
 			);
 			throw new NotFoundError('');
 		}
 
-		this.logger.info('Reset-password token resolved successfully', { userId: id });
+		this.logger.info('Reset-password token resolved successfully', { userId });
 		void this.internalHooks.onUserPasswordResetEmailClick({ user });
 	}
 
@@ -217,18 +198,7 @@ export class PasswordResetController {
 
 		const validPassword = validatePassword(password);
 
-		// Timestamp is saved in seconds
-		const currentTimestamp = Math.floor(Date.now() / 1000);
-
-		const user = await this.userRepository.findOne({
-			where: {
-				id: userId,
-				resetPasswordToken,
-				resetPasswordTokenExpiration: MoreThanOrEqual(currentTimestamp),
-			},
-			relations: ['authIdentities'],
-		});
-
+		const user = await this.userRepository.findByPasswordResetToken(userId, resetPasswordToken);
 		if (!user) {
 			this.logger.debug(
 				'Request to resolve password token failed because no user was found for the provided user ID and reset password token',

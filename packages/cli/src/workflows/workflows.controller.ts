@@ -79,15 +79,11 @@ workflowsController.post(
 		await Db.transaction(async (transactionManager) => {
 			savedWorkflow = await transactionManager.save<WorkflowEntity>(newWorkflow);
 
-			const role = await Db.collections.Role.findOneByOrFail({
-				name: 'owner',
-				scope: 'workflow',
-			});
+			const roleId = await Db.repositories.Role.findWorkflowOwnerRoleIdOrFail();
 
 			const newSharedWorkflow = new SharedWorkflow();
-
 			Object.assign(newSharedWorkflow, {
-				role,
+				roleId,
 				user: req.user,
 				workflow: savedWorkflow,
 			});

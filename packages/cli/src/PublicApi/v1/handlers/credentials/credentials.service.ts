@@ -57,10 +57,7 @@ export async function saveCredential(
 	user: User,
 	encryptedData: ICredentialsDb,
 ): Promise<CredentialsEntity> {
-	const role = await Db.collections.Role.findOneByOrFail({
-		name: 'owner',
-		scope: 'credential',
-	});
+	const roleId = await Db.repositories.Role.findCredentialOwnerRoleIdOrFail();
 
 	await ExternalHooks().run('credentials.create', [encryptedData]);
 
@@ -72,7 +69,7 @@ export async function saveCredential(
 		const newSharedCredential = new SharedCredentials();
 
 		Object.assign(newSharedCredential, {
-			role,
+			roleId,
 			user,
 			credentials: savedCredential,
 		});
