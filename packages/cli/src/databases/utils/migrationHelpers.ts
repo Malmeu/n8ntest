@@ -5,6 +5,7 @@ import type { QueryRunner } from 'typeorm/query-runner/QueryRunner';
 import config from '@/config';
 import { getLogger } from '@/Logger';
 import { inTest } from '@/constants';
+import type { MigrationClass } from '@db/types';
 
 const PERSONALIZATION_SURVEY_FILENAME = 'personalizationSurvey.json';
 
@@ -60,6 +61,25 @@ export function logMigrationEnd(migrationName: string, disableLogging = inTest):
 	}, 100);
 }
 
+export const wrapMigration = (migration: MigrationClass) => {
+	const name = migration.name;
+	const dbType = config.getEnv('database.type');
+	const dbName = config.getEnv(`database.${dbType === 'mariadb' ? 'mysqldb' : dbType}.database`);
+	const tablePrefix = config.getEnv('database.tablePrefix');
+
+	const { up, down } = migration.prototype;
+	Object.assign(migration.prototype, {
+		up: async (queryRunner: QueryRunner) => {
+			logMigrationStart(name);
+			await up.call(this, { queryRunner, tablePrefix, dbType, dbName });
+			logMigrationEnd(name);
+		},
+		down: async (queryRunner: QueryRunner) => {
+			await down.call(this, { queryRunner, tablePrefix, dbType, dbName });
+		},
+	});
+};
+
 function batchQuery(query: string, limit: number, offset = 0): string {
 	return `
 			${query}
@@ -90,8 +110,6 @@ export async function runInBatches(
 		offset += limit;
 	} while (batchedQueryResults.length === limit);
 }
-
-export const getTablePrefix = () => config.getEnv('database.tablePrefix');
 
 export const escapeQuery = (
 	queryRunner: QueryRunner,

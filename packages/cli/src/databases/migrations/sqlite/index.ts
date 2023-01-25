@@ -1,3 +1,4 @@
+import type { MigrationClass } from '@db/types';
 import { InitialMigration1588102412422 } from './1588102412422-InitialMigration';
 import { WebhookModel1592445003908 } from './1592445003908-WebhookModel';
 import { CreateIndexStoppedAt1594825041918 } from './1594825041918-CreateIndexStoppedAt';
@@ -28,7 +29,7 @@ import { MessageEventBusDestinations1671535397530 } from './1671535397530-Messag
 import { DeleteExecutionsWithWorkflows1673268682475 } from './1673268682475-DeleteExecutionsWithWorkflows';
 import { CreateLdapEntities1674509946020 } from './1674509946020-CreateLdapEntities';
 
-const sqliteMigrations = [
+const sqliteMigrations: MigrationClass[] = [
 	InitialMigration1588102412422,
 	WebhookModel1592445003908,
 	CreateIndexStoppedAt1594825041918,
