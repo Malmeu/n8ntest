@@ -65,27 +65,34 @@ export const samlAuth = (): void => {
 	const samlStrategy = new SamlStrategy(
 		{
 			callbackUrl: 'http://localhost:5678/rest/login/saml/callback',
-			cert: 'MIICmzCCAYMCBgGFoTGBXjANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDDAZuOG5hcHAwHhcNMjMwMTExMTQxNTU0WhcNMzMwMTExMTQxNzM0WjARMQ8wDQYDVQQDDAZuOG5hcHAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDbCr9sxmIqOBIK1h0K+ztpjDjJjwMVLlu+2bTWPO9zipjQGNGxPFW7Pmv16Xoaw2BrtdUj5Qn133tUvXVgLm4LY0bGW63M0D4XeG/Ti6H2mmgyD8Ad/R/14KE8PD5Dpdv/HG/4DPWxMMgbVPhHwYFSRXy+0+HKTCPNFPEJ1BnN9P/J4NgiPrrX2Hk1EHL8qRnWFBbcBMc3BnStUGbKg18vXVVu08gqhLukqUdRg4eNJuwAjSK7fyi3y6NWH+KH4sPKqWcC9KjcmtJyoU5MyKriG3qMoCvdFyd2Z32v+eCujG8rztjti8FLPesVGvsHt961WHMqEpKwMe434UjPKpdXAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAEFOjylC8xOobkh6o8c69g+bOkASfUsxuYD9C4tinP9zN/D+zoxtQOC2GYxQeaV7QOikK5gPizt1Wzd86VRg29RAXWdkPoF3m5n0zQkQWX80b9ZV4QTiCTpWUOZu3VJ0WHUuWjFv8sMmTOaGJxskP3b2ID3CgekwW3ywZ+8rae5s1zVLcsJ6VHF/ScdV/ZGsFsOY5oopECI51MdiI2HK+ahzprPCC7lCiGfotqtZxtojQsxkoEVJjBkerGmqPSrPhag8HTCSSaWWpPAmg40IDlkXYpjWXRrr4L2aXA37zuBd+u9fa1FrYxk4Ijr/54+tU57IJWWAq2tDUYgn0cW2G/I=',
-			issuer: 'n8napp',
-			entryPoint: 'http://localhost:8080/realms/n8nio/protocol/saml',
-			signatureAlgorithm: 'sha256',
-			digestAlgorithm: 'sha256',
+			cert: 'get it from onelogin to use',
+			issuer: 'n8n-app',
+			entryPoint:
+				'https://n8n.onelogin.com/trust/saml2/http-post/sso/90723edb-ae45-48ef-badb-fdf4f380fbcd',
+			// signatureAlgorithm: 'sha256',
+			// digestAlgorithm: 'sha256',
 			// decryptionPvk: privatekey,
 			// privateKey: privatekey,
+			wantAuthnResponseSigned: false,
+			wantAssertionsSigned: false,
+			audience: false,
 		},
-		async function (req, profile, done) {
-			console.log('trying to find a user based on profile', profile);
+		async function (profile, done) {
+			console.log('trying to find a user based on profile', profile, done);
+			// @ts-ignore
 			if (!profile?.email) {
+				// @ts-ignore
 				return done(new Error('Email not found in profile'));
 			}
-
+			// @ts-ignore
 			const user = await UserService.get({ email: profile.email });
 
 			if (!user) {
+				// @ts-ignore
 				return done(new Error('User not found'));
 				// TODO: Provision user.
 			}
-
+			// @ts-ignore
 			done(null, user as unknown as Record<string, unknown>);
 		},
 		function (req, profile, done) {

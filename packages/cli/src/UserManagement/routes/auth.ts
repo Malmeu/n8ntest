@@ -121,4 +121,14 @@ export function authenticationMethods(this: N8nApp): void {
 			res.send('potato');
 		},
 	);
+
+	this.app.post(
+		`/${this.restEndpoint}/login/saml/callback`,
+		bodyParser.urlencoded({ extended: false }),
+		passport.authenticate('saml', { failureRedirect: '/callback_error', failureFlash: true }),
+		(req, res) => {
+			console.log(req.query);
+			res.send('potato');
+		},
+	);
 }
