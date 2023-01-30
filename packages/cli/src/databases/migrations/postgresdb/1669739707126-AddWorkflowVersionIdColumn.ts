@@ -12,19 +12,17 @@ export class AddWorkflowVersionIdColumn1669739707126 implements MigrationInterfa
 			FROM ${tablePrefix}workflow_entity
 		`)) as Array<{ id: number }>;
 
-		workflowIds.map(async ({ id }) => {
+		for (const { id } of workflowIds) {
 			const [updateQuery, updateParams] = queryRunner.connection.driver.escapeQueryWithParameters(
-				`
-					UPDATE ${tablePrefix}workflow_entity
-					SET "versionId" = :versionId
-					WHERE id = '${id}'
-				`,
+				`UPDATE ${tablePrefix}workflow_entity
+				 SET "versionId" = :versionId
+				 WHERE id = '${id}'`,
 				{ versionId: uuidv4() },
 				{},
 			);
 
-			return queryRunner.query(updateQuery, updateParams);
-		});
+			await queryRunner.query(updateQuery, updateParams);
+		}
 	}
 
 	async down({ queryRunner, tablePrefix }: MigrationContext) {
