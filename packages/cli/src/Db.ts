@@ -13,7 +13,8 @@ import type {
 } from 'typeorm';
 import { DataSource as Connection } from 'typeorm';
 import type { TlsOptions } from 'tls';
-import type { DatabaseType, IDatabaseCollections } from '@/Interfaces';
+import type { DatabaseType } from '@db/types';
+import type { IDatabaseCollections } from '@/Interfaces';
 import * as GenericHelpers from '@/GenericHelpers';
 
 import config from '@/config';

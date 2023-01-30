@@ -141,8 +141,6 @@ export type ICredentialsDecryptedResponse = ICredentialsDecryptedDb;
 
 export type SaveExecutionDataType = 'all' | 'none';
 
-export type { DatabaseType } from '@db/types';
-
 export interface IExecutionBase {
 	id?: string;
 	mode: WorkflowExecuteMode;

@@ -15,11 +15,11 @@ import { LessThanOrEqual } from 'typeorm';
 import { DateUtils } from 'typeorm/util/DateUtils';
 
 import * as Db from '@/Db';
+import type { DatabaseType } from '@db/types';
 import * as ResponseHelper from '@/ResponseHelper';
 import * as GenericHelpers from '@/GenericHelpers';
 import * as ActiveExecutions from '@/ActiveExecutions';
 import type {
-	DatabaseType,
 	IExecutionFlattedDb,
 	IExecutionsStopData,
 	IWorkflowExecutionDataProcess,
