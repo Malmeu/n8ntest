@@ -11,7 +11,6 @@ import * as ActiveExecutions from '@/ActiveExecutions';
 import config from '@/config';
 import type { User } from '@db/entities/User';
 import type { ExecutionEntity } from '@db/entities/ExecutionEntity';
-import type { DatabaseType } from '@db/types';
 import type {
 	IExecutionFlattedResponse,
 	IExecutionResponse,
